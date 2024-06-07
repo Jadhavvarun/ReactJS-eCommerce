@@ -1,13 +1,55 @@
-import React, { Fragment } from "react";
-import { Link, useLocation } from "react-router-dom"; 
+import React, { Fragment, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Tab from "react-bootstrap/Tab";
 import Nav from "react-bootstrap/Nav";
 import SEO from "../../components/seo";
 import LayoutOne from "../../layouts/LayoutOne";
 import Breadcrumb from "../../wrappers/breadcrumb/Breadcrumb";
+import axios from "axios"; 
+import { useAuth } from "../../utils/authContext";
 
 const LoginRegister = () => {
   let { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [registerData, setRegisterData] = useState({ username: "", password: "", email: "" });
+
+  const handleLoginChange = (e) => {
+    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegisterChange = (e) => {
+    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:4000/api/login", loginData);
+      const { token } = response.data;
+      localStorage.setItem("token", token);
+      login(response.data.user);
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed", error);
+      // Handle login error (e.g., show error message)
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:4000/api/login/create", registerData);
+      console.log("Registration successful", response.data);
+      // Optionally, you can automatically log in the user after registration
+      // or show a success message and redirect to login tab
+    } catch (error) {
+      console.error("Registration failed", error);
+      // Handle registration error (e.g., show error message)
+    }
+  };
 
   return (
     <Fragment>
@@ -45,16 +87,20 @@ const LoginRegister = () => {
                       <Tab.Pane eventKey="login">
                         <div className="login-form-container">
                           <div className="login-register-form">
-                            <form>
+                            <form onSubmit={handleLoginSubmit}>
                               <input
                                 type="text"
                                 name="user-name"
                                 placeholder="Username"
+                                value={loginData.username}
+                  onChange={handleLoginChange}
                               />
                               <input
                                 type="password"
                                 name="user-password"
                                 placeholder="Password"
+                                value={loginData.password}
+                                onChange={handleLoginChange}
                               />
                               <div className="button-box">
                                 <div className="login-toggle-btn">
@@ -75,21 +121,27 @@ const LoginRegister = () => {
                       <Tab.Pane eventKey="register">
                         <div className="login-form-container">
                           <div className="login-register-form">
-                            <form>
+                            <form onSubmit={handleRegisterSubmit}>
                               <input
                                 type="text"
                                 name="user-name"
                                 placeholder="Username"
+                                value={registerData.username}
+                  onChange={handleRegisterChange}
                               />
                               <input
                                 type="password"
                                 name="user-password"
                                 placeholder="Password"
+                                value={registerData.password}
+                  onChange={handleRegisterChange}
                               />
                               <input
                                 name="user-email"
                                 placeholder="Email"
                                 type="email"
+                                value={registerData.email}
+                  onChange={handleRegisterChange}
                               />
                               <div className="button-box">
                                 <button type="submit">
